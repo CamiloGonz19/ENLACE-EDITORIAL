@@ -208,8 +208,90 @@ let S={screen:'dashboard',isAdmin:false,adminLogin:false,adminPin:'',sesion:null
     personal:{alistador:'',verificador:'',empacador:''},bw:{}},
   editId:null,editF:{},viewId:null,hf:'todos'};
 
-function load(){try{const c=localStorage.getItem('ee_cls');if(c)S.clientes=JSON.parse(c);}catch{}
-  try{const p=localStorage.getItem('ee_ped');if(p)S.pedidos=JSON.parse(p);}catch{}render();}
+// ============================================================
+// LOGIN — PANTALLA DE AUTENTICACIÓN
+// ============================================================
+function rLogin(){
+  const f=S.loginF||{};
+  return `<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f0f4ff,#f0fdf4);padding:1rem;">
+    <div style="background:#fff;border-radius:16px;padding:2rem;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.12);">
+      <div style="text-align:center;margin-bottom:1.5rem;">
+        <div style="width:64px;height:64px;background:linear-gradient(135deg,#1a56a0,#2d8a4e);border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:800;margin:0 auto 12px;">EE</div>
+        <div style="font-size:20px;font-weight:700;">Enlace Editorial</div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:3px;">Sistema de Empaque · Logística</div>
+      </div>
+      ${f.err?`<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;font-size:12px;color:#dc2626;margin-bottom:12px;"><i class="ti ti-alert-circle"></i> ${f.err}</div>`:''}
+      <div style="margin-bottom:12px;">
+        <span style="font-size:11px;color:#6b7280;display:block;margin-bottom:4px;">Usuario</span>
+        <input type="text" id="login-user" placeholder="Ej: camilog"
+          style="width:100%;padding:10px;font-size:14px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;box-sizing:border-box;"
+          onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+      </div>
+      <div style="margin-bottom:20px;">
+        <span style="font-size:11px;color:#6b7280;display:block;margin-bottom:4px;">Contraseña</span>
+        <input type="password" id="login-pass" placeholder="••••••••"
+          style="width:100%;padding:10px;font-size:14px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;box-sizing:border-box;"
+          onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button onclick="doLogin()"
+        style="width:100%;padding:12px;background:linear-gradient(135deg,#1a56a0,#2d8a4e);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">
+        <i class="ti ti-login"></i> Ingresar
+      </button>
+      <div style="text-align:center;margin-top:14px;font-size:11px;color:#9ca3af;">${E.nit} · ${E.email}</div>
+    </div>
+  </div>`;
+}
+
+function doLogin(){
+  const userEl=document.getElementById('login-user');
+  const passEl=document.getElementById('login-pass');
+  const user=(userEl?userEl.value:'').trim().toLowerCase();
+  const pass=passEl?passEl.value:'';
+  if(!S.loginF) S.loginF={};
+  const users=getUsers();
+  const found=users.find(u=>u.user.toLowerCase()===user&&u.pass===pass);
+  if(!found){
+    S.loginF.err='Usuario o contraseña incorrectos. Intenta de nuevo.';
+    render();
+    requestAnimationFrame(()=>{
+      const p=document.getElementById('login-pass');
+      if(p){p.value='';p.focus();}
+    });
+    return;
+  }
+  S.sesion={id:found.id,nombre:found.nombre,user:found.user,rol:found.rol,cargo:found.cargo};
+  S.isAdmin=(found.rol==='admin');
+  S.loginF={};
+  try{sessionStorage.setItem('ee_sesion',JSON.stringify(S.sesion));}catch{}
+  render();
+}
+
+function cerrarSesion(){
+  if(!confirm('¿Cerrar sesión de '+S.sesion.nombre+'?')) return;
+  S.sesion=null;S.isAdmin=false;S.loginF={};
+  try{sessionStorage.removeItem('ee_sesion');}catch{}
+  render();
+}
+
+function cambiarPass(userId){
+  const inp=document.getElementById('pass-'+userId);
+  if(!inp||!inp.value.trim()){alert('Ingresa la nueva contraseña');return;}
+  const users=getUsers();
+  const u=users.find(x=>x.id===userId);
+  if(!u)return;
+  u.pass=inp.value.trim();
+  saveUsers(users);
+  alert('Contraseña de '+u.nombre+' actualizada');
+  render();
+}
+
+
+function load(){
+  try{const ses=sessionStorage.getItem('ee_sesion');if(ses){S.sesion=JSON.parse(ses);S.isAdmin=S.sesion?.rol==='admin';}}catch{}
+  try{const c=localStorage.getItem('ee_cls');if(c)S.clientes=JSON.parse(c);}catch{}
+  try{const p=localStorage.getItem('ee_ped');if(p)S.pedidos=JSON.parse(p);}catch{}
+  render();
+}
 function saveCls(){try{localStorage.setItem('ee_cls',JSON.stringify(S.clientes));}catch{}}
 function savePeds(){try{localStorage.setItem('ee_ped',JSON.stringify(S.pedidos));}catch{}}
 
