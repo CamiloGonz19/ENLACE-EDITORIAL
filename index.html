@@ -10,7 +10,7 @@
 <meta name="application-name" content="Enlace Editorial">
 <meta name="theme-color" content="#1a56a0">
 <meta name="description" content="Sistema de empaque logístico - Enlace Editorial">
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <title>Enlace Editorial — Sistema de Empaque</title>
@@ -659,7 +659,7 @@ load();
 // ============================================================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('./sw.js')
       .then(reg => console.log('✅ SW registrado:', reg.scope))
       .catch(err => console.log('SW no disponible (modo local):', err.message));
   });
@@ -699,8 +699,7 @@ async function cargarClientesAPI() {
 }
 
 // ============================================================
-// EMAIL
- — SMTP preparado, por ahora abre cliente de correo
+// EMAIL — SMTP preparado, por ahora abre cliente de correo
 // ============================================================
 function buildEmailBody(pedidoData){
   const c=gc(pedidoData.clienteId);
