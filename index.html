@@ -183,16 +183,16 @@ const E={nombre:'Enlace Editorial',nit:'900.545.111-3',email:'gonzalezcamilo1625
 // USUARIOS Y ROLES
 // ============================================================
 const DEFAULT_USERS = [
-  {id:'u01',nombre:'CAMILO G.',user:'camilog',pass:'enlace2026',rol:'admin',cargo:'admin'},
-  {id:'u02',nombre:'JULIAN B.',user:'julianb',pass:'enlace2026',rol:'operario',cargo:'alistador'},
-  {id:'u03',nombre:'YOHAN M.',user:'yohanm',pass:'enlace2026',rol:'operario',cargo:'alistador'},
-  {id:'u04',nombre:'HENRY S.',user:'henrys',pass:'enlace2026',rol:'operario',cargo:'alistador'},
-  {id:'u05',nombre:'SEBASTIAN Q.',user:'sebastianq',pass:'enlace2026',rol:'operario',cargo:'empacador'},
-  {id:'u06',nombre:'LUIS V.',user:'luisv',pass:'enlace2026',rol:'operario',cargo:'alistador'},
-  {id:'u07',nombre:'CAMILO Q.',user:'camiloq',pass:'enlace2026',rol:'operario',cargo:'alistador'},
-  {id:'u08',nombre:'DAVID G.',user:'davidg',pass:'enlace2026',rol:'operario',cargo:'alistador'},
-  {id:'u09',nombre:'MARIO M.',user:'mariom',pass:'enlace2026',rol:'operario',cargo:'verificador'},
-  {id:'u10',nombre:'LUIS B.',user:'luisb',pass:'enlace2026',rol:'operario',cargo:'verificador'},
+  {id:'u01',nombre:'CAMILO G.',user:'camilog',pass:'enlace2026',rol:'admin',cargo:'Administrativo'},
+  {id:'u02',nombre:'MARIO M.',user:'mariom',pass:'enlace2026',rol:'admin',cargo:'Administrativo'},
+  {id:'u03',nombre:'JULIAN B.',user:'julianb',pass:'enlace2026',rol:'empacador',cargo:'Empacador'},
+  {id:'u04',nombre:'YOHAN M.',user:'yohanm',pass:'enlace2026',rol:'empacador',cargo:'Empacador'},
+  {id:'u05',nombre:'HENRY S.',user:'henrys',pass:'enlace2026',rol:'empacador',cargo:'Empacador'},
+  {id:'u06',nombre:'SEBASTIAN Q.',user:'sebastianq',pass:'enlace2026',rol:'empacador',cargo:'Empacador'},
+  {id:'u07',nombre:'LUIS V.',user:'luisv',pass:'enlace2026',rol:'empacador',cargo:'Empacador'},
+  {id:'u08',nombre:'CAMILO Q.',user:'camiloq',pass:'enlace2026',rol:'empacador',cargo:'Empacador'},
+  {id:'u09',nombre:'DAVID G.',user:'davidg',pass:'enlace2026',rol:'empacador',cargo:'Empacador'},
+  {id:'u10',nombre:'LUIS B.',user:'luisb',pass:'enlace2026',rol:'empacador',cargo:'Empacador'},
 ];
 function getUsers(){
   try{const u=localStorage.getItem('ee_users');if(u)return JSON.parse(u);}catch{}
@@ -252,7 +252,7 @@ function render(){
   }
   // Show/hide admin button
   const admBtn=document.getElementById('nb-admin');
-  if(admBtn) admBtn.style.display=S.sesion.rol==='admin'?'':'none';
+  if(admBtn) admBtn.style.display=S.sesion?.rol==='admin'?'':'none';
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   const nb=document.getElementById('nb-'+S.screen);if(nb)nb.classList.add('on');
   // Admin btn managed by render()
@@ -323,8 +323,11 @@ function rFicha(c){
 
 function rNew(){
   const w=S.wiz;
-  const bar=['Cliente','Tipo','Empaque','Documento'].map((s,i)=>{const n=i+1;const cl=n<w.step?'dn':n===w.step?'act':'';return`<div class="si ${cl}">${n<w.step?'✓ ':''}${s}</div>`;}).join('');
-  return`<div class="step-bar">${bar}</div>${[rW1,rW2,rW3,rW4][w.step-1]()}`;
+  const steps=['Cliente','Empaque','Documento'];
+  const visStep=w.step===1?1:w.step===4?3:2;
+  const bar=steps.map((s,i)=>{const n=i+1;const cl=n<visStep?'dn':n===visStep?'act':'';return`<div class="si ${cl}">${n<visStep?'✓ ':''}${s}</div>`;}).join('');
+  const body=w.step===1?rW1():w.step===4?rW4():rW3();
+  return`<div class="step-bar">${bar}</div>${body}`;
 }
 
 function rW1(){
@@ -334,20 +337,20 @@ function rW1(){
   const todos=busq?S.clientes.filter(c=>c.nombre.toLowerCase().includes(busq)||c.ciudad.toLowerCase().includes(busq)):S.clientes;
   const cc=c=>{const s=w.clienteId===c.id;
     const color=c.tipo==='bogota'?'var(--blue)':c.tipo==='internacional'?'#7c3aed':'var(--green)';
-    return`<div class="cc ${s?'sr2':''}" onclick="wCli('${c.id}')" style="${s?'border:2px solid '+color+';background:'+color+'15;':''}">
+    return`<div class="cc cli-item ${s?'sr2':''}" data-name="${c.nombre}" data-city="${c.ciudad||''}" onclick="wCli('${c.id}')" style="${s?'border:2px solid '+color+';background:'+color+'15;':''}">
       <div class="cc-av" style="background:${s?color:'var(--border)'};">${iniciales(c.nombre)}</div>
       <div><div class="cc-name">${c.nombre}</div>
       <div class="cc-city"><span class="dot" style="background:${c.tipo==='bogota'?'var(--blue)':c.tipo==='internacional'?'#7c3aed':'var(--green)'};"></span>${c.ciudad}${c.categoria?' · '+c.categoria:''}</div></div>
     </div>`;};
   return`
     <div class="card">
-      <div class="ct"><i class="ti ti-users"></i> Clientes <span style="margin-left:auto;font-size:10px;color:var(--text3);">${todos.length} de ${S.clientes.length}</span></div>
+      <div class="ct"><i class="ti ti-users"></i> Clientes <span id="cli-count" style="margin-left:auto;font-size:10px;color:var(--text3);">${S.clientes.length} de ${S.clientes.length}</span></div>
       <input type="text" id="client-search" placeholder="Buscar por nombre o ciudad..."
         value="${w._busq||''}"
         oninput="buscarCliente(this.value)"
         style="margin-bottom:10px;font-size:13px;">
-      <div class="cg2">${todos.slice(0,60).map(cc).join('')}</div>
-      ${todos.length>60?`<div style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px;">Mostrando 60 de ${todos.length} — escribe más para filtrar</div>`:''}
+      <div class="cg2">${S.clientes.map(cc).join('')}</div>
+      
     </div>
     ${selC?rFicha(selC):''}
     ${selC?`<div class="card" style="border-color:var(--green);">
@@ -387,7 +390,15 @@ function rW3(){
       <div class="cc-av" style="background:var(--green);width:24px;height:24px;font-size:10px;">${iniciales(c.nombre)}</div>
       <span style="font-weight:600;">${c.nombre}</span>
       <span style="color:var(--text3);">· ${c.ciudad}</span>
-      <span class="badge bgl" style="margin-left:4px;">Tipo def.: ${w.tipo}</span>
+      <span style="margin-left:auto;font-size:11px;font-weight:600;color:var(--text2);">Tipo de pedido:</span>
+      ${['venta','muestra','varilla'].map(t=>`<button onclick="S.wiz.tipo='${t}';render();"
+        style="padding:4px 12px;font-size:11px;border-radius:20px;cursor:pointer;font-family:inherit;
+        border:1.5px solid ${w.tipo===t?(t==='venta'?'var(--blue)':t==='muestra'?'var(--amber)':'var(--pink)'):'var(--border)'};
+        background:${w.tipo===t?(t==='venta'?'var(--blue-lt)':t==='muestra'?'var(--amber-lt)':'var(--pink-lt)'):'transparent'};
+        color:${w.tipo===t?(t==='venta'?'var(--blue)':t==='muestra'?'var(--amber)':'var(--pink)'):'var(--text2)'};
+        font-weight:${w.tipo===t?'700':'400'};">
+        ${t.charAt(0).toUpperCase()+t.slice(1)}
+      </button>`).join('')}
     </div>
 
     <div class="card"><div class="ct"><i class="ti ti-users"></i> Personal de despacho</div>
@@ -452,9 +463,9 @@ function rW3(){
       <div style="display:grid;grid-template-columns:1fr 65px 55px auto;gap:8px;align-items:end;">
         <div>
           <span class="lbl">Título ${(()=>{const cf=w._colFilt||'';const lbl=cf==='LIT'?'(Literatura)':cf==='NOV'?'(Nov. Gráfica)':cf==='ESP'?'(Especiales)':cf==='TXT'?'(Textos)':'';return lbl?'<span class="badge bbl" style="margin-left:4px;">'+lbl+'</span>':''})()}</span>
-          <select onchange="wForm('libroId',this.value)" style="font-size:12px;">
-            <option value="">— Seleccionar versión —</option>
-            ${(()=>{
+          <!-- AUTOCOMPLETE LIST -->
+          <div id="book-results" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--surface);">
+          ${(()=>{
               let lista=CAT;
               const cf=w._colFilt||'';
               if(cf==='LIT') lista=lista.filter(l=>['1. LILLIPUT','2. PRIMERA ESTACIÓN','3. SEGUNDA ESTACIÓN','4. TERCERA ESTACIÓN','5. CUARTA ESTACIÓN','6. QUINTA ESTACIÓN','8. CLÁSICOS PARA BIBLIOTECA'].includes(l.categoria));
@@ -464,11 +475,11 @@ function rW3(){
               if(w._bookBusq) lista=lista.filter(l=>l.titulo.toLowerCase().includes(w._bookBusq.toLowerCase())||(l.autor||'').toLowerCase().includes(w._bookBusq.toLowerCase()));
               if(!w._bookBusq && !cf) lista=lista.slice(0,80);
               return lista.map(l=>{
-                const cat=l.categoria.replace(/^\d+\.?\d*\s*/,'').replace('NOVELA GRÁFICA EN INGLÉS','[NG-EN]').replace('NOVELA GRÁFICA','[Nov.Gráf]').replace('CLÁSICOS PARA BIBLIOTECA','[Clásico]').replace('PRIMERA ESTACIÓN','[1ªEst]').replace('SEGUNDA ESTACIÓN','[2ªEst]').replace('TERCERA ESTACIÓN','[3ªEst]').replace('CUARTA ESTACIÓN','[4ªEst]').replace('QUINTA ESTACIÓN','[5ªEst]').replace('ESPECIALES','[Especial]').replace('TEXTOS','[Texto]').replace('LILLIPUT','[Lilliput]');
-                return `<option value="${l.id}" ${w.form.libroId===l.id?'selected':''}>${cat} ${l.titulo} — $${fN(l.pvp)}</option>`;
+                const cat=(()=>{let s=l.categoria;while(s.length>0&&(s[0]>='0'&&s[0]<='9'||s[0]==='.'||s[0]===' '))s=s.slice(1);return s;})().replace('NOVELA GRÁFICA EN INGLÉS','[NG-EN]').replace('NOVELA GRÁFICA','[Nov.Gráf]').replace('CLÁSICOS PARA BIBLIOTECA','[Clásico]').replace('PRIMERA ESTACIÓN','[1ªEst]').replace('SEGUNDA ESTACIÓN','[2ªEst]').replace('TERCERA ESTACIÓN','[3ªEst]').replace('CUARTA ESTACIÓN','[4ªEst]').replace('QUINTA ESTACIÓN','[5ªEst]').replace('ESPECIALES','[Especial]').replace('TEXTOS','[Texto]').replace('LILLIPUT','[Lilliput]');
+                return `<div onclick="wForm('libroId','${l.id}');render();" style="padding:7px 12px;cursor:pointer;font-size:12px;border-bottom:.5px solid var(--border);background:${w.form.libroId===l.id?'var(--blue-lt)':'transparent'};color:${w.form.libroId===l.id?'var(--blue)':'var(--text)'};font-weight:${w.form.libroId===l.id?'600':'400'};" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=this.classList.contains('sel-book')?'var(--blue-lt)':'transparent'"><span style='font-size:10px;color:var(--text3);'>${cat}</span> ${l.titulo} <span style='float:right;font-weight:600;color:var(--green);'>$${fN(l.pvp)}</span></div>`;
               }).join('');
             })()}
-          </select>
+          </div>
           ${w.form.libroId?(()=>{const l=gl(w.form.libroId);return l?`<div style="font-size:11px;color:var(--green);margin-top:3px;"><i class="ti ti-check"></i> ${l.titulo} · $${fN(l.pvp)} PVP · ${l.categoria}</div>`:''})():''}
         </div>
         <div><span class="lbl">Cant.</span><input type="number" min="1" value="${w.form.cant}" onchange="wForm('cant',parseInt(this.value)||1)" style="text-align:center;"></div>
@@ -530,11 +541,14 @@ function rW3(){
 }
 
 function rW4(){
-  const w=S.wiz;const folio=genFolio();const c=gc(w.clienteId);
+  const w=S.wiz;
+  // Editable folio — use custom or auto-generate
+  if(!w.folioEdit) w.folioEdit=genFolio();
+  const folio=w.folioEdit;const c=gc(w.clienteId);
   return`<div class="notif"><i class="ti ti-send"></i> Entrega en: <strong>${w.dirOverride!==undefined&&w.dirOverride?w.dirOverride:(gc(w.clienteId).direccion||'sin dirección')}</strong> · Notificación → ${gc(w.clienteId).email||'sin correo'} y ${E.email}</div>
     <div class="doc">${rDoc({folio,clienteId:w.clienteId,tipo:w.tipo,items:w.items,personal:{...w.personal},bw:{...w.bw},ts:Date.now()})}</div>
     <div class="nav-row" style="flex-wrap:wrap;gap:8px;">
-      <button class="btn" onclick="wBack()"><i class="ti ti-arrow-left"></i> Editar</button>
+      <button class="btn" onclick="wBack()"><i class="ti ti-arrow-left"></i> Editar empaque</button>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn" onclick="imprimirDoc()" style="border-color:#6366f1;color:#4f46e5;"><i class="ti ti-printer"></i> Imprimir PDF</button>
         <button class="btn" onclick="enviarWhatsApp({folio:'${folio}',clienteId:S.wiz.clienteId,tipo:S.wiz.tipo,items:S.wiz.items,personal:S.wiz.personal,bw:S.wiz.bw,dirEntrega:S.wiz.dirOverride||gc(S.wiz.clienteId).direccion||'',ts:Date.now()})" style="border-color:#25d366;color:#128c3e;background:#e8fdf0;"><i class="ti ti-brand-whatsapp"></i> WhatsApp Admin</button>
@@ -711,8 +725,19 @@ function wTipo(t){S.wiz.tipo=t;render();}
 function wForm(k,v){S.wiz.form[k]=v;}
 function wPersonal(k,v){S.wiz.personal[k]=v;}
 function wWeight(caja,v){S.wiz.bw[caja]=parseFloat(v)||0;}
-function wNext(){S.wiz.step=Math.min(4,S.wiz.step+1);render();}
-function wBack(){S.wiz.step=Math.max(1,S.wiz.step-1);render();}
+function wNext(){
+  if(S.wiz.step===1) S.wiz.step=3;
+  else S.wiz.step=Math.min(4,S.wiz.step+1);
+  if(S.wiz.step===3 && S.sesion && !S.wiz.personal.empacador){
+    S.wiz.personal.empacador=S.sesion.nombre;
+  }
+  render();
+}
+function wBack(){
+  if(S.wiz.step===3) S.wiz.step=1;
+  else S.wiz.step=Math.max(1,S.wiz.step-1);
+  render();
+}
 function wAdd(){
   const f=S.wiz.form;if(!f.libroId||f.cant<1||f.caja<1)return;
   const itemTipo=f.tipo||S.wiz.tipo||'venta';
@@ -746,7 +771,7 @@ function wSave(folio){
   const w=S.wiz;
   const dirFinal=w.dirOverride!==undefined?w.dirOverride:(gc(w.clienteId).direccion||'');const p={id:'P'+Date.now(),folio,clienteId:w.clienteId,tipo:w.tipo,items:w.items.map(i=>({...i})),personal:{...w.personal},bw:{...w.bw},dirEntrega:dirFinal,ts:Date.now()};
   S.pedidos.push(p);savePeds();
-  S.wiz={step:1,clienteId:'',tipo:'',items:[],nxtId:1,form:{libroId:'',cant:1,caja:1,tipo:'venta'},filtCat:'',dirOverride:undefined,editItemId:null,editF:{},_busq:'',_bookBusq:'',_colFilt:'',_busqLibro:'',personal:{alistador:'',verificador:'',empacador:''},bw:{}};
+  S.wiz={step:1,clienteId:'',tipo:'',items:[],nxtId:1,form:{libroId:'',cant:1,caja:1,tipo:'venta'},filtCat:'',dirOverride:undefined,editItemId:null,editF:{},_busq:'',_bookBusq:'',_colFilt:'',folioEdit:'',_busqLibro:'',personal:{alistador:'',verificador:'',empacador:''},bw:{}};
   S.viewId=p.id;S.screen='orderdetail';render();
   setTimeout(()=>descargarPedido(p.id),600);
 }
