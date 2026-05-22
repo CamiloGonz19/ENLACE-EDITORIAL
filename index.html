@@ -280,12 +280,7 @@ function rFicha(c){
         <div class="campo"><div class="campo-lbl"><i class="ti ti-phone" style="font-size:10px;"></i> Teléfono</div><div class="campo-val">${c.telefono||'—'}</div></div>
         <div class="campo" style="grid-column:1/-1;"><div class="campo-lbl"><i class="ti ti-mail" style="font-size:10px;"></i> Correo electrónico (recibe la lista de empaque)</div><div class="campo-val email">${c.email||'—'}</div></div>
       </div>
-      <div class="destino ${eB?'':'reg'}">
-        <div class="destino-lbl ${eB?'':'reg'}"><i class="ti ti-truck"></i> Lugar de entrega del pedido</div>
-        <div class="destino-val">${c.direccion||'—'}</div>
-        <div class="destino-sub">${c.ciudad||''}${c.zona?', '+c.zona:''} · CP: ${c.cp||'—'} · Colombia</div>
-      </div>
-      <div class="confirmado"><i class="ti ti-circle-check"></i> Seleccionado · Notificación se enviará a: <strong>${c.email||'sin correo registrado'}</strong></div>
+      <div class="confirmado"><i class="ti ti-circle-check"></i> Seleccionado · ${c.ciudad||''} · ${c.email||'sin correo'}</div>
     </div>
   </div>`;
 }
@@ -310,7 +305,7 @@ function rW1(){
     </div>`;};
   return`
     <div class="card"><div class="ct"><i class="ti ti-users"></i> Clientes <span style="margin-left:auto;font-size:10px;color:var(--text3);">${todos.length} de ${S.clientes.length}</span></div>
-      <div style="margin-bottom:10px;"><input type="text" placeholder="🔍 Buscar por nombre o ciudad..." value="${busq}" oninput="S.wiz._busq=this.value;render()" style="font-size:13px;"></div>
+      <div style="margin-bottom:10px;"><input type="text" placeholder="🔍 Buscar por nombre o ciudad..." value="${busq}" id="client-search" oninput="buscarCliente(this.value)" style="font-size:13px;"></div>
       <div class="cg2">${todos.slice(0,50).map(cc).join('')}</div>
       ${todos.length>50?`<div style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px;">Mostrando 50 de ${todos.length}. Usa el buscador para filtrar.</div>`:''}
     </div>
@@ -364,14 +359,35 @@ function rW3(){
     </div>
 
     <div class="card"><div class="ct"><i class="ti ti-package"></i> Agregar libro a caja</div>
-      <div style="display:grid;grid-template-columns:2fr 100px 55px 55px auto;gap:8px;align-items:end;">
-        <div><span class="lbl">Título</span>
-          <select onchange="wForm('libroId',this.value)">
-            <option value="">Seleccionar...</option>
-            ${(w.filtCat?CAT.filter(l=>l.categoria===w.filtCat):CAT).map(l=>`<option value="${l.id}" ${w.form.libroId===l.id?'selected':''}>${l.titulo} — $${fN(l.pvp)}</option>`).join('')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;">
+        <div style="grid-column:1/-1;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;">
+            <div>
+              <span class="lbl">Buscar libro</span>
+              <input type="text" id="busq-libro" placeholder="Escribe título o autor..." 
+                value="${w._busqLibro||''}"
+                oninput="S.wiz._busqLibro=this.value;render()"
+                style="font-size:13px;">
+            </div>
+            <div>
+              <span class="lbl">Filtrar categoría</span>
+              <select onchange="wFiltCat(this.value)" style="font-size:12px;">
+                <option value="">— Todas —</option>
+                ${[...new Set(CAT.map(l=>l.categoria))].map(c=>`<option value="${c}" ${w.filtCat===c?'selected':''}>${c}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <span class="lbl">Seleccionar título</span>
+          <select onchange="wForm('libroId',this.value)" size="5" style="height:auto;min-height:100px;">
+            <option value="">— Seleccionar —</option>
+            ${(()=>{let lista=CAT;if(w.filtCat)lista=lista.filter(l=>l.categoria===w.filtCat);if(w._busqLibro)lista=lista.filter(l=>l.titulo.toLowerCase().includes(w._busqLibro.toLowerCase())||(l.autor||'').toLowerCase().includes(w._busqLibro.toLowerCase()));return lista.slice(0,100).map(l=>{
+                const cat=l.categoria.replace(/^[0-9.]+\s*/,'').replace('NOVELA GRÁFICA EN INGLÉS','[NG-EN]').replace('NOVELA GRÁFICA','[Nov.Gráf]').replace('CLÁSICOS PARA BIBLIOTECA','[Clásico]').replace('PRIMERA ESTACIÓN','[1ªEst]').replace('SEGUNDA ESTACIÓN','[2ªEst]').replace('TERCERA ESTACIÓN','[3ªEst]').replace('CUARTA ESTACIÓN','[4ªEst]').replace('QUINTA ESTACIÓN','[5ªEst]').replace('ESPECIALES','[Especial]').replace('TEXTOS','[Texto]').replace('LILLIPUT','[Lilliput]');
+                return `<option value="${l.id}" ${w.form.libroId===l.id?'selected':''}>${cat} ${l.titulo} — $${fN(l.pvp)}</option>`;
+              }).join('');})()}
           </select>
+          ${w.form.libroId?`<div style="font-size:11px;color:var(--green);margin-top:4px;"><i class="ti ti-check"></i> ${gl(w.form.libroId).titulo||''} — $${fN(gl(w.form.libroId).pvp||0)}</div>`:''}
         </div>
-        <div><span class="lbl">Tipo</span>
+        <div style="grid-column:1/2;"><span class="lbl">Tipo</span>
           <select onchange="wForm('tipo',this.value)" style="font-size:12px;">${tipoOpts(w.form.tipo||w.tipo)}</select>
         </div>
         <div><span class="lbl">Cant.</span><input type="number" min="1" value="${w.form.cant}" onchange="wForm('cant',parseInt(this.value)||1)" style="text-align:center;"></div>
@@ -447,8 +463,9 @@ function rW4(){
     <div class="nav-row" style="flex-wrap:wrap;gap:8px;">
       <button class="btn" onclick="wBack()"><i class="ti ti-arrow-left"></i> Editar</button>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn" onclick="imprimirDoc()" style="border-color:#6366f1;color:#4f46e5;"><i class="ti ti-printer"></i> Imprimir / PDF</button>
-        <button class="btn" onclick="enviarCorreo('${folio}')" style="border-color:#ea580c;color:#c2410c;"><i class="ti ti-mail"></i> Enviar por correo</button>
+        <button class="btn" onclick="imprimirDoc()" style="border-color:#6366f1;color:#4f46e5;"><i class="ti ti-printer"></i> Imprimir PDF</button>
+        <button class="btn" onclick="enviarWhatsApp({folio:'${folio}',clienteId:S.wiz.clienteId,tipo:S.wiz.tipo,items:S.wiz.items,personal:S.wiz.personal,bw:S.wiz.bw,dirEntrega:S.wiz.dirOverride||gc(S.wiz.clienteId).direccion||'',ts:Date.now()})" style="border-color:#25d366;color:#128c3e;background:#e8fdf0;"><i class="ti ti-brand-whatsapp"></i> WhatsApp Admin</button>
+        <button class="btn" onclick="enviarWhatsAppCliente({folio:'${folio}',clienteId:S.wiz.clienteId,tipo:S.wiz.tipo,items:S.wiz.items,personal:S.wiz.personal,bw:S.wiz.bw,dirEntrega:S.wiz.dirOverride||gc(S.wiz.clienteId).direccion||'',ts:Date.now()})" style="border-color:#25d366;color:#128c3e;"><i class="ti ti-brand-whatsapp"></i> WhatsApp Cliente</button>
         <button class="btn bg" onclick="wSave('${folio}')"><i class="ti ti-check"></i> Confirmar y guardar</button>
       </div>
     </div>`;
@@ -479,7 +496,7 @@ function rDoc(p){
         ${c.email?`<div style="font-size:11px;color:var(--blue);">${c.email}</div>`:''}
       </div>
       <div class="dm"><div class="dml"><i class="ti ti-map-pin" style="font-size:11px;"></i> Dirección de entrega</div>
-        <div class="dmv">${c.direccion||'—'}</div>
+        <div class="dmv">${p.dirEntrega||c.direccion||'—'}</div>
         <div style="font-size:11px;color:var(--text2);">${c.ciudad||''}${c.zona?', '+c.zona:''}</div>
         ${c.cp?`<div style="font-size:11px;color:var(--text2);">CP: ${c.cp} · Colombia</div>`:''}
         <div style="font-size:11px;font-weight:700;color:var(--text);margin-top:4px;">$${fN(tp)} PVP${kg>0?' · '+kg.toFixed(1)+' kg':''}</div>
@@ -546,8 +563,9 @@ function rDetail(){
   if(!p)return`<div class="empty"><i class="ti ti-alert-circle"></i>No encontrado</div>`;
   return`<div style="display:flex;gap:8px;margin-bottom:1rem;align-items:center;">
     <button class="btn" onclick="go('history')"><i class="ti ti-arrow-left"></i> Volver</button>
-    <button class="btn bb" onclick="window.print()"><i class="ti ti-printer"></i> Imprimir / PDF</button>
-    <button class="btn" onclick="enviarCorreoPedido(S.viewId)" style="border-color:#ea580c;color:#c2410c;"><i class="ti ti-mail"></i> Enviar por correo</button>
+    <button class="btn bb" onclick="window.print()"><i class="ti ti-printer"></i> Imprimir PDF</button>
+    <button class="btn" onclick="enviarWhatsApp(S.pedidos.find(x=>x.id===S.viewId))" style="border-color:#25d366;color:#128c3e;background:#e8fdf0;"><i class="ti ti-brand-whatsapp"></i> WhatsApp Admin</button>
+    <button class="btn" onclick="enviarWhatsAppCliente(S.pedidos.find(x=>x.id===S.viewId))" style="border-color:#25d366;color:#128c3e;"><i class="ti ti-brand-whatsapp"></i> WhatsApp Cliente</button>
   </div><div class="doc">${rDoc(p)}</div>`;
 }
 
@@ -636,8 +654,9 @@ function wSave(folio){
   const w=S.wiz;
   const dirFinal=w.dirOverride!==undefined?w.dirOverride:(gc(w.clienteId).direccion||'');const p={id:'P'+Date.now(),folio,clienteId:w.clienteId,tipo:w.tipo,items:w.items.map(i=>({...i})),personal:{...w.personal},bw:{...w.bw},dirEntrega:dirFinal,ts:Date.now()};
   S.pedidos.push(p);savePeds();
-  S.wiz={step:1,clienteId:'',tipo:'',items:[],nxtId:1,form:{libroId:'',cant:1,caja:1,tipo:'venta'},filtCat:'',dirOverride:undefined,editItemId:null,editF:{},_busq:'',personal:{alistador:'',verificador:'',empacador:''},bw:{}};
+  S.wiz={step:1,clienteId:'',tipo:'',items:[],nxtId:1,form:{libroId:'',cant:1,caja:1,tipo:'venta'},filtCat:'',dirOverride:undefined,editItemId:null,editF:{},_busq:'',_bookBusq:'',_busqLibro:'',personal:{alistador:'',verificador:'',empacador:''},bw:{}};
   S.viewId=p.id;S.screen='orderdetail';render();
+  setTimeout(()=>descargarPedido(p.id),600);
 }
 function viewOrd(id){S.viewId=id;S.screen='orderdetail';render();}
 function setHf(f){S.hf=f;render();}
@@ -698,6 +717,54 @@ async function cargarClientesAPI() {
 // ============================================================
 // EMAIL — SMTP preparado, por ahora abre cliente de correo
 // ============================================================
+function buildWAText(pedidoData){
+  const c=gc(pedidoData.clienteId);
+  const cx=cajasOf(pedidoData.items);
+  const te=totEj(pedidoData.items);
+  const tp=totPvp(pedidoData.items);
+  const kg=totKg(pedidoData.bw);
+  const pers=pedidoData.personal||{};
+  let txt=`📦 *LISTA DE EMPAQUE - Enlace Editorial*\n`;
+  txt+=`📋 Folio: *${pedidoData.folio}*\n`;
+  txt+=`📅 Fecha: ${new Date(pedidoData.ts||Date.now()).toLocaleDateString('es-CO')}\n\n`;
+  txt+=`👤 *Cliente:* ${c.nombre||'—'}\n`;
+  txt+=`📍 *Entrega:* ${pedidoData.dirEntrega||c.direccion||'—'}, ${c.ciudad||''}\n`;
+  txt+=`📞 ${c.telefono||'—'}\n\n`;
+  txt+=`📊 *Resumen:* ${cx.length} caja(s) · ${te} ejemplares · *$${fN(tp)} PVP*${kg>0?' · '+kg.toFixed(1)+' kg':''}\n\n`;
+  cx.forEach(n=>{
+    const its=pedidoData.items.filter(i=>i.caja===n);
+    const cajaPeso=parseFloat((pedidoData.bw||{})[n])||0;
+    txt+=`📦 *Caja ${n}*${cajaPeso>0?' ('+cajaPeso.toFixed(1)+' kg)':''}:\n`;
+    its.forEach(it=>{const l=gl(it.libroId);txt+=`  • ${l.titulo||'—'} [${it.tipo}] x${it.cant} = $${fN((l.pvp||0)*it.cant)}\n`;});
+    txt+='\n';
+  });
+  txt+=`👥 Alistador: ${pers.alistador||'—'} | Verificador: ${pers.verificador||'—'} | Empacador: ${pers.empacador||'—'}\n\n`;
+  txt+=`_Enlace Editorial · NIT 900.545.111-3_`;
+  return txt;
+}
+
+function enviarWhatsApp(pedidoData, telCliente){
+  const texto=buildWAText(pedidoData);
+  const encoded=encodeURIComponent(texto);
+  // Enviar al admin siempre
+  const telAdmin='573001234567'; // Cambiar por número real del admin
+  window.open('https://wa.me/'+telAdmin+'?text='+encoded,'_blank');
+}
+
+function enviarWhatsAppCliente(pedidoData){
+  const c=gc(pedidoData.clienteId);
+  const texto=buildWAText(pedidoData);
+  const encoded=encodeURIComponent(texto);
+  const tel=(c.telefono||'').replace(/[^0-9]/g,'');
+  const telFull=tel.startsWith('57')?tel:'57'+tel;
+  if(tel){
+    window.open('https://wa.me/'+telFull+'?text='+encoded,'_blank');
+  } else {
+    // No hay teléfono — copiar al portapapeles
+    navigator.clipboard?.writeText(buildWAText(pedidoData)).then(()=>alert('✅ Texto copiado. Pégalo en WhatsApp.'));
+  }
+}
+
 function buildEmailBody(pedidoData){
   const c=gc(pedidoData.clienteId);
   const cx=cajasOf(pedidoData.items);
@@ -760,8 +827,56 @@ function enviarCorreoPedido(pedId){
   window.open(`mailto:${c.email||''}?cc=${encodeURIComponent(E.email)}&subject=${asunto}&body=${cuerpo}`);
 }
 
-function imprimirDoc(){
-  window.print();
+function imprimirDoc(){window.print();}
+
+function descargarPedido(pedId){
+  const p=S.pedidos.find(x=>x.id===pedId);if(!p)return;
+  const c=gc(p.clienteId);
+  const docEl=document.querySelector('.doc');
+  const docContent=docEl?docEl.outerHTML:'<p>Sin contenido</p>';
+  const css='.doc-top{background:linear-gradient(135deg,#1a56a0,#2d8a4e);padding:18px 20px;color:#fff;border-radius:10px 10px 0 0}.doc-top-name{font-size:20px;font-weight:800}.doc-top-sub{font-size:11px;opacity:.85;margin-top:3px}.doc-body{border:1px solid #e5e7eb;border-top:none;padding:18px;border-radius:0 0 10px 10px}.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.dm{background:#f9fafb;border-radius:8px;padding:10px 12px;font-size:12px}.dml{font-size:10px;color:#9ca3af;margin-bottom:3px}.dmv{font-weight:600}.csec{border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:10px}.chd{background:#f3f4f6;padding:8px 13px;display:flex;justify-content:space-between;font-size:12px}.crow{display:grid;grid-template-columns:3fr 70px 50px 80px;font-size:11px;padding:6px 13px;border-top:.5px solid #e5e7eb}.tvb{background:#f9fafb;border-radius:8px;padding:10px 14px;margin-top:10px}.tvr{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}.tvr.tot{font-weight:700;font-size:15px;border-top:1px solid #e5e7eb;padding-top:8px;margin-top:6px}.fr{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;border-top:1px solid #e5e7eb;padding-top:14px;margin-top:14px}.fb{text-align:center}.fl{border-bottom:1px solid #111;height:32px;margin-bottom:5px}.flbl{font-size:9px;color:#9ca3af;text-transform:uppercase}.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}.bbl{background:#e8f0fb;color:#0c3370}.bal{background:#faeeda;color:#633806}.bpl{background:#fbeaf0;color:#72243e}.doc-personal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;padding:10px 0;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb}.dp{text-align:center}.dp-role{font-size:9px;color:#9ca3af;text-transform:uppercase}.dp-name{font-size:12px;font-weight:600}body{font-family:Arial,sans-serif;padding:24px;max-width:800px;margin:0 auto;color:#111}';
+  const titulo='Lista Empaque '+p.folio;
+  const fullHtml='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>'+titulo+'</title><style>'+css+'</style></head><body>'+docContent+'</body></html>';
+  const blob=new Blob([fullHtml],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='ListaEmpaque_'+p.folio+'_'+c.nombre.split(' ').join('_')+'.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function compartirWhatsApp(pedId){
+  const p=S.pedidos.find(x=>x.id===pedId);if(!p)return;
+  const c=gc(p.clienteId);
+  const cx=cajasOf(p.items);
+  const te=totEj(p.items);
+  const tp=totPvp(p.items);
+  const kg=totKg(p.bw);
+  const pers=p.personal||{};
+  const NL='\n';
+  const SEP='━━━━━━━━━━━━━━━━━━━━━━';
+  let txt='*LISTA DE EMPAQUE - Enlace Editorial*'+NL+SEP+NL;
+  txt+='Folio: *'+p.folio+'*'+NL;
+  txt+='Fecha: '+fD(p.ts)+NL+NL;
+  txt+='Cliente: *'+c.nombre+'*'+NL;
+  txt+='Ciudad: '+c.ciudad+NL;
+  txt+='Direccion: '+(p.dirEntrega||c.direccion||'-')+NL+NL;
+  txt+='Cajas: '+cx.length+' | Ejemplares: '+te+(kg>0?' | Peso: '+kg.toFixed(1)+' kg':'')+NL;
+  txt+='Total PVP: *$'+fN(tp)+'*'+NL;
+  if(pers.empacador) txt+=NL+'Empacador: '+pers.empacador;
+  txt+=NL+SEP+NL;
+  cx.forEach(function(n){
+    const its=p.items.filter(function(i){return i.caja===n;});
+    const kn=parseFloat((p.bw||{})[n])||0;
+    txt+=NL+'Caja '+n+(kn>0?' ('+kn.toFixed(1)+' kg)':'')+':'+NL;
+    its.forEach(function(it){
+      const l=gl(it.libroId);
+      txt+='  - '+(l.titulo||'-')+' ['+it.tipo+'] x'+it.cant+NL;
+    });
+  });
+  txt+=NL+'Enlace Editorial - NIT '+E.nit;
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
 }
 
 </script>
