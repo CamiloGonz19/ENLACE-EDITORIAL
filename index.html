@@ -294,26 +294,30 @@ function rNew(){
 function rW1(){
   const w=S.wiz;
   const selC=w.clienteId?gc(w.clienteId):null;
-  const [busq,setBusq]=[S.wiz._busq||'',v=>{S.wiz._busq=v;render();}];
-  const todos=S.clientes.filter(c=>!busq||c.nombre.toLowerCase().includes(busq.toLowerCase())||c.ciudad.toLowerCase().includes(busq.toLowerCase()));
+  const busq=(w._busq||'').toLowerCase();
+  const todos=busq?S.clientes.filter(c=>c.nombre.toLowerCase().includes(busq)||c.ciudad.toLowerCase().includes(busq)):S.clientes;
   const cc=c=>{const s=w.clienteId===c.id;
     const color=c.tipo==='bogota'?'var(--blue)':c.tipo==='internacional'?'#7c3aed':'var(--green)';
-    return`<div class="cc ${s?'sr2':''}" onclick="wCli('${c.id}')" style="${s?'border-color:'+color+';background:'+color+'15;':''}">
+    return`<div class="cc ${s?'sr2':''}" onclick="wCli('${c.id}')" style="${s?'border:2px solid '+color+';background:'+color+'15;':''}">
       <div class="cc-av" style="background:${s?color:'var(--border)'};">${iniciales(c.nombre)}</div>
       <div><div class="cc-name">${c.nombre}</div>
-      <div class="cc-city"><span class="dot" style="background:${s?color:'#d1d5db'};"></span>${c.ciudad}${c.categoria?' · '+c.categoria:''}</div></div>
+      <div class="cc-city"><span class="dot" style="background:${c.tipo==='bogota'?'var(--blue)':c.tipo==='internacional'?'#7c3aed':'var(--green)'};"></span>${c.ciudad}${c.categoria?' · '+c.categoria:''}</div></div>
     </div>`;};
   return`
-    <div class="card"><div class="ct"><i class="ti ti-users"></i> Clientes <span style="margin-left:auto;font-size:10px;color:var(--text3);">${todos.length} de ${S.clientes.length}</span></div>
-      <div style="margin-bottom:10px;"><input type="text" placeholder="🔍 Buscar por nombre o ciudad..." value="${busq}" id="client-search" oninput="buscarCliente(this.value)" style="font-size:13px;"></div>
-      <div class="cg2">${todos.slice(0,50).map(cc).join('')}</div>
-      ${todos.length>50?`<div style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px;">Mostrando 50 de ${todos.length}. Usa el buscador para filtrar.</div>`:''}
+    <div class="card">
+      <div class="ct"><i class="ti ti-users"></i> Clientes <span style="margin-left:auto;font-size:10px;color:var(--text3);">${todos.length} de ${S.clientes.length}</span></div>
+      <input type="text" id="client-search" placeholder="Buscar por nombre o ciudad..."
+        value="${w._busq||''}"
+        oninput="buscarCliente(this.value)"
+        style="margin-bottom:10px;font-size:13px;">
+      <div class="cg2">${todos.slice(0,60).map(cc).join('')}</div>
+      ${todos.length>60?`<div style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px;">Mostrando 60 de ${todos.length} — escribe más para filtrar</div>`:''}
     </div>
     ${selC?rFicha(selC):''}
     ${selC?`<div class="card" style="border-color:var(--green);">
       <div class="ct"><i class="ti ti-map-pin"></i> Dirección de entrega para este pedido <span style="margin-left:auto;" class="badge bgl">Editable por pedido</span></div>
-      <input type="text" id="dir-inp" value="${(w.dirOverride!==undefined?w.dirOverride:(selC.direccion||''))}" onchange="S.wiz.dirOverride=this.value" placeholder="Ej: Cra 43A #5-46, El Poblado, Medellín" style="font-size:13px;">
-      <div style="font-size:11px;color:var(--text3);margin-top:5px;"><i class="ti ti-info-circle" style="font-size:10px;"></i> Este campo no modifica el perfil del cliente — solo aplica a este pedido.</div>
+      <input type="text" value="${(w.dirOverride!==undefined?w.dirOverride:(selC.direccion||''))}" onchange="S.wiz.dirOverride=this.value" placeholder="Dirección de entrega..." style="font-size:13px;">
+      <div style="font-size:11px;color:var(--text3);margin-top:5px;"><i class="ti ti-info-circle" style="font-size:10px;"></i> Solo aplica a este pedido, no cambia el perfil del cliente.</div>
     </div>`:''}
     <div class="nav-row">
       <button class="btn" onclick="go('dashboard')"><i class="ti ti-x"></i> Cancelar</button>
@@ -352,57 +356,90 @@ function rW3(){
 
     <div class="card"><div class="ct"><i class="ti ti-users"></i> Personal de despacho</div>
       <div class="g3">
-        <div><span class="lbl">Alistador</span><input type="text" value="${w.personal.alistador}" onchange="wPersonal('alistador',this.value)" placeholder="Nombre"></div>
-        <div><span class="lbl">Verificador</span><input type="text" value="${w.personal.verificador}" onchange="wPersonal('verificador',this.value)" placeholder="Nombre"></div>
-        <div><span class="lbl">Empacador</span><input type="text" value="${w.personal.empacador}" onchange="wPersonal('empacador',this.value)" placeholder="Nombre"></div>
+        <div><span class="lbl">Alistador</span>
+          <select onchange="wPersonal('alistador',this.value)" style="font-size:13px;">
+            <option value="">— Seleccionar —</option>
+            <option value="JULIAN B." ${w.personal.alistador==="JULIAN B."?"selected":""}>  JULIAN B.</option>
+<option value="YOHAN M." ${w.personal.alistador==="YOHAN M."?"selected":""}>  YOHAN M.</option>
+<option value="HENRY S." ${w.personal.alistador==="HENRY S."?"selected":""}>  HENRY S.</option>
+<option value="SEBASTIAN Q." ${w.personal.alistador==="SEBASTIAN Q."?"selected":""}>  SEBASTIAN Q.</option>
+<option value="LUIS V." ${w.personal.alistador==="LUIS V."?"selected":""}>  LUIS V.</option>
+<option value="CAMILO Q." ${w.personal.alistador==="CAMILO Q."?"selected":""}>  CAMILO Q.</option>
+<option value="CAMILO G." ${w.personal.alistador==="CAMILO G."?"selected":""}>  CAMILO G.</option>
+<option value="DAVID G." ${w.personal.alistador==="DAVID G."?"selected":""}>  DAVID G.</option>
+          </select>
+        </div>
+        <div><span class="lbl">Verificador</span>
+          <select onchange="wPersonal('verificador',this.value)" style="font-size:13px;">
+            <option value="">— Seleccionar —</option>
+            <option value="MARIO M." ${w.personal.verificador==="MARIO M."?"selected":""}>  MARIO M.</option>
+<option value="SEBASTIAN Q." ${w.personal.verificador==="SEBASTIAN Q."?"selected":""}>  SEBASTIAN Q.</option>
+<option value="LUIS B." ${w.personal.verificador==="LUIS B."?"selected":""}>  LUIS B.</option>
+<option value="CAMILO G." ${w.personal.verificador==="CAMILO G."?"selected":""}>  CAMILO G.</option>
+          </select>
+        </div>
+        <div><span class="lbl">Empacador</span>
+          <select onchange="wPersonal('empacador',this.value)" style="font-size:13px;">
+            <option value="">— Seleccionar —</option>
+            <option value="SEBASTIAN Q." ${w.personal.empacador==="SEBASTIAN Q."?"selected":""}>  SEBASTIAN Q.</option>
+<option value="LUIS V." ${w.personal.empacador==="LUIS V."?"selected":""}>  LUIS V.</option>
+<option value="CAMILO G." ${w.personal.empacador==="CAMILO G."?"selected":""}>  CAMILO G.</option>
+          </select>
+        </div>
       </div>
     </div>
 
     <div class="card"><div class="ct"><i class="ti ti-package"></i> Agregar libro a caja</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;">
-        <div style="grid-column:1/-1;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;">
-            <div>
-              <span class="lbl">Buscar libro</span>
-              <input type="text" id="busq-libro" placeholder="Escribe título o autor..." 
-                value="${w._busqLibro||''}"
-                oninput="S.wiz._busqLibro=this.value;render()"
-                style="font-size:13px;">
-            </div>
-            <div>
-              <span class="lbl">Filtrar categoría</span>
-              <select onchange="wFiltCat(this.value)" style="font-size:12px;">
-                <option value="">— Todas —</option>
-                ${[...new Set(CAT.map(l=>l.categoria))].map(c=>`<option value="${c}" ${w.filtCat===c?'selected':''}>${c}</option>`).join('')}
-              </select>
-            </div>
-          </div>
-          <span class="lbl">Seleccionar título</span>
-          <select onchange="wForm('libroId',this.value)" size="5" style="height:auto;min-height:100px;">
-            <option value="">— Seleccionar —</option>
-            ${(()=>{let lista=CAT;if(w.filtCat)lista=lista.filter(l=>l.categoria===w.filtCat);if(w._busqLibro)lista=lista.filter(l=>l.titulo.toLowerCase().includes(w._busqLibro.toLowerCase())||(l.autor||'').toLowerCase().includes(w._busqLibro.toLowerCase()));return lista.slice(0,100).map(l=>{
-                const cat=l.categoria.replace(/^[0-9.]+\s*/,'').replace('NOVELA GRÁFICA EN INGLÉS','[NG-EN]').replace('NOVELA GRÁFICA','[Nov.Gráf]').replace('CLÁSICOS PARA BIBLIOTECA','[Clásico]').replace('PRIMERA ESTACIÓN','[1ªEst]').replace('SEGUNDA ESTACIÓN','[2ªEst]').replace('TERCERA ESTACIÓN','[3ªEst]').replace('CUARTA ESTACIÓN','[4ªEst]').replace('QUINTA ESTACIÓN','[5ªEst]').replace('ESPECIALES','[Especial]').replace('TEXTOS','[Texto]').replace('LILLIPUT','[Lilliput]');
+      <!-- Colección quick-filter -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        ${[
+          {k:'',l:'📚 Todos'},
+          {k:'LIT',l:'📖 Literatura'},
+          {k:'NOV',l:'🎨 Nov. Gráfica'},
+          {k:'ESP',l:'⭐ Especiales'},
+          {k:'TXT',l:'📝 Textos'}
+        ].map(btn=>`<button onclick="S.wiz._colFilt='${btn.k}';S.wiz._bookBusq='';render();"
+          style="padding:5px 12px;font-size:11px;border-radius:20px;cursor:pointer;font-family:inherit;border:1.5px solid ${(w._colFilt||'')===btn.k?'var(--blue)':'var(--border)'};background:${(w._colFilt||'')===btn.k?'var(--blue-lt)':'transparent'};color:${(w._colFilt||'')===btn.k?'var(--blue)':'var(--text2)'};font-weight:${(w._colFilt||'')===btn.k?'600':'400'};">
+          ${btn.l}
+        </button>`).join('')}
+      </div>
+      <!-- Búsqueda de título -->
+      <div style="margin-bottom:10px;">
+        <span class="lbl">Buscar título</span>
+        <input type="text" id="book-search"
+          placeholder="Escribe el título o autor..."
+          value="${w._bookBusq||''}"
+          oninput="S.wiz._bookBusq=this.value;render();requestAnimationFrame(()=>{const i=document.getElementById('book-search');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}});"
+          style="font-size:13px;">
+      </div>
+      <!-- Selector -->
+      <div style="display:grid;grid-template-columns:1fr 65px 55px auto;gap:8px;align-items:end;">
+        <div>
+          <span class="lbl">Título ${(()=>{const cf=w._colFilt||'';const lbl=cf==='LIT'?'(Literatura)':cf==='NOV'?'(Nov. Gráfica)':cf==='ESP'?'(Especiales)':cf==='TXT'?'(Textos)':'';return lbl?'<span class="badge bbl" style="margin-left:4px;">'+lbl+'</span>':''})()}</span>
+          <select onchange="wForm('libroId',this.value)" style="font-size:12px;">
+            <option value="">— Seleccionar versión —</option>
+            ${(()=>{
+              let lista=CAT;
+              const cf=w._colFilt||'';
+              if(cf==='LIT') lista=lista.filter(l=>['1. LILLIPUT','2. PRIMERA ESTACIÓN','3. SEGUNDA ESTACIÓN','4. TERCERA ESTACIÓN','5. CUARTA ESTACIÓN','6. QUINTA ESTACIÓN','8. CLÁSICOS PARA BIBLIOTECA'].includes(l.categoria));
+              else if(cf==='NOV') lista=lista.filter(l=>l.categoria.includes('NOVELA GRÁFICA'));
+              else if(cf==='ESP') lista=lista.filter(l=>l.categoria==='ESPECIALES');
+              else if(cf==='TXT') lista=lista.filter(l=>l.categoria==='9. TEXTOS');
+              if(w._bookBusq) lista=lista.filter(l=>l.titulo.toLowerCase().includes(w._bookBusq.toLowerCase())||(l.autor||'').toLowerCase().includes(w._bookBusq.toLowerCase()));
+              if(!w._bookBusq && !cf) lista=lista.slice(0,80);
+              return lista.map(l=>{
+                const cat=l.categoria.replace(/^\d+\.?\d*\s*/,'').replace('NOVELA GRÁFICA EN INGLÉS','[NG-EN]').replace('NOVELA GRÁFICA','[Nov.Gráf]').replace('CLÁSICOS PARA BIBLIOTECA','[Clásico]').replace('PRIMERA ESTACIÓN','[1ªEst]').replace('SEGUNDA ESTACIÓN','[2ªEst]').replace('TERCERA ESTACIÓN','[3ªEst]').replace('CUARTA ESTACIÓN','[4ªEst]').replace('QUINTA ESTACIÓN','[5ªEst]').replace('ESPECIALES','[Especial]').replace('TEXTOS','[Texto]').replace('LILLIPUT','[Lilliput]');
                 return `<option value="${l.id}" ${w.form.libroId===l.id?'selected':''}>${cat} ${l.titulo} — $${fN(l.pvp)}</option>`;
-              }).join('');})()}
+              }).join('');
+            })()}
           </select>
-          ${w.form.libroId?`<div style="font-size:11px;color:var(--green);margin-top:4px;"><i class="ti ti-check"></i> ${gl(w.form.libroId).titulo||''} — $${fN(gl(w.form.libroId).pvp||0)}</div>`:''}
-        </div>
-        <div style="grid-column:1/2;"><span class="lbl">Tipo</span>
-          <select onchange="wForm('tipo',this.value)" style="font-size:12px;">${tipoOpts(w.form.tipo||w.tipo)}</select>
+          ${w.form.libroId?(()=>{const l=gl(w.form.libroId);return l?`<div style="font-size:11px;color:var(--green);margin-top:3px;"><i class="ti ti-check"></i> ${l.titulo} · $${fN(l.pvp)} PVP · ${l.categoria}</div>`:''})():''}
         </div>
         <div><span class="lbl">Cant.</span><input type="number" min="1" value="${w.form.cant}" onchange="wForm('cant',parseInt(this.value)||1)" style="text-align:center;"></div>
         <div><span class="lbl">Caja</span><input type="number" min="1" value="${w.form.caja}" onchange="wForm('caja',parseInt(this.value)||1)" style="text-align:center;"></div>
         <div><span class="lbl" style="visibility:hidden;">.</span><button class="btn bb" onclick="wAdd()" style="width:100%;white-space:nowrap;"><i class="ti ti-plus"></i> Agregar</button></div>
       </div>
-      <div style="margin-top:8px;">
-        <span class="lbl">Filtrar por categoría</span>
-        <select onchange="wFiltCat(this.value)" style="font-size:12px;">
-          <option value="">— Todas las categorías —</option>
-          ${[...new Set(CAT.map(l=>l.categoria))].map(c=>`<option value="${c}" ${w.filtCat===c?'selected':''}>${c}</option>`).join('')}
-        </select>
-      </div>
     </div>
-
     ${cx.length>0?`<div class="card"><div class="ct"><i class="ti ti-weight"></i> Peso por caja
       ${totKg(w.bw)>0?`<span style="margin-left:auto;font-size:11px;font-weight:500;">Total: ${totKg(w.bw).toFixed(1)} kg</span>`:''}
     </div>
@@ -414,7 +451,7 @@ function rW3(){
       ${w.items.length?`<span style="margin-left:auto;font-size:10px;color:var(--text3);">${w.items.length} ítem(s) · ${cx.length} caja(s) · ${totEj(w.items)} ej.</span>`:''}
     </div>
     ${w.items.length===0?`<div class="empty"><i class="ti ti-inbox"></i>Sin ítems aún</div>`:`
-    <table class="tbl"><thead><tr><th>Título</th><th>Tipo</th><th>PVP</th><th style="text-align:center">Cant.</th><th>Caja</th><th>Subtotal</th><th style="text-align:center">Acciones</th></tr></thead>
+    <table class="tbl"><thead><tr><th>Título</th><th>PVP</th><th style="text-align:center">Cant.</th><th>Caja</th><th>Subtotal</th><th style="text-align:center">Acciones</th></tr></thead>
     <tbody>${w.items.map(it=>{
       const l=gl(it.libroId);
       const isEditing=w.editItemId===it.id;
@@ -654,7 +691,7 @@ function wSave(folio){
   const w=S.wiz;
   const dirFinal=w.dirOverride!==undefined?w.dirOverride:(gc(w.clienteId).direccion||'');const p={id:'P'+Date.now(),folio,clienteId:w.clienteId,tipo:w.tipo,items:w.items.map(i=>({...i})),personal:{...w.personal},bw:{...w.bw},dirEntrega:dirFinal,ts:Date.now()};
   S.pedidos.push(p);savePeds();
-  S.wiz={step:1,clienteId:'',tipo:'',items:[],nxtId:1,form:{libroId:'',cant:1,caja:1,tipo:'venta'},filtCat:'',dirOverride:undefined,editItemId:null,editF:{},_busq:'',_bookBusq:'',_busqLibro:'',personal:{alistador:'',verificador:'',empacador:''},bw:{}};
+  S.wiz={step:1,clienteId:'',tipo:'',items:[],nxtId:1,form:{libroId:'',cant:1,caja:1,tipo:'venta'},filtCat:'',dirOverride:undefined,editItemId:null,editF:{},_busq:'',_bookBusq:'',_colFilt:'',_busqLibro:'',personal:{alistador:'',verificador:'',empacador:''},bw:{}};
   S.viewId=p.id;S.screen='orderdetail';render();
   setTimeout(()=>descargarPedido(p.id),600);
 }
