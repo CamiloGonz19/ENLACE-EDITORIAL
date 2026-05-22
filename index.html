@@ -437,7 +437,7 @@ function rW1(){
     </div>`;};
   return`
     <div class="card">
-      <div class="ct"><i class="ti ti-users"></i> Clientes <span id="cli-count" style="margin-left:auto;font-size:10px;color:var(--text3);">${S.clientes.length} de ${S.clientes.length}</span></div>
+      <div class="ct"><i class="ti ti-users"></i> Clientes <span id="cli-count" style="margin-left:auto;font-size:10px;color:var(--text3);">${todos.length} de ${S.clientes.length}</span></div>
       <input type="text" id="client-search" placeholder="Buscar por nombre o ciudad..."
         value="${w._busq||''}"
         oninput="buscarCliente(this.value)"
@@ -483,6 +483,7 @@ function rW3(){
       <div class="cc-av" style="background:var(--green);width:24px;height:24px;font-size:10px;">${iniciales(c.nombre)}</div>
       <span style="font-weight:600;">${c.nombre}</span>
       <span style="color:var(--text3);">· ${c.ciudad}</span>
+      <span style="font-size:10px;color:var(--text3);"><i class="ti ti-map-pin" style="font-size:10px;"></i> ${w.dirOverride!==undefined&&w.dirOverride?w.dirOverride:c.direccion||'Sin dirección'}</span>
       <span style="margin-left:auto;font-size:11px;font-weight:600;color:var(--text2);">Tipo de pedido:</span>
       ${['venta','muestra','varilla'].map(t=>`<button onclick="S.wiz.tipo='${t}';render();"
         style="padding:4px 12px;font-size:11px;border-radius:20px;cursor:pointer;font-family:inherit;
@@ -654,7 +655,7 @@ function rW4(){
         <button class="btn" onclick="imprimirDoc()" style="border-color:#6366f1;color:#4f46e5;"><i class="ti ti-printer"></i> Imprimir PDF</button>
         <button class="btn" onclick="enviarWhatsApp({folio:'${folio}',clienteId:S.wiz.clienteId,tipo:S.wiz.tipo,items:S.wiz.items,personal:S.wiz.personal,bw:S.wiz.bw,dirEntrega:S.wiz.dirOverride||gc(S.wiz.clienteId).direccion||'',ts:Date.now()})" style="border-color:#25d366;color:#128c3e;background:#e8fdf0;"><i class="ti ti-brand-whatsapp"></i> WhatsApp Admin</button>
         <button class="btn" onclick="enviarWhatsAppCliente({folio:'${folio}',clienteId:S.wiz.clienteId,tipo:S.wiz.tipo,items:S.wiz.items,personal:S.wiz.personal,bw:S.wiz.bw,dirEntrega:S.wiz.dirOverride||gc(S.wiz.clienteId).direccion||'',ts:Date.now()})" style="border-color:#25d366;color:#128c3e;"><i class="ti ti-brand-whatsapp"></i> WhatsApp Cliente</button>
-        <button class="btn bg" onclick="wSave('${folio}')"><i class="ti ti-check"></i> Confirmar y guardar</button>
+        <button class="btn bg" onclick="wSave(S.wiz.folioEdit||genFolio())"><i class="ti ti-check"></i> Confirmar y guardar</button>
       </div>
     </div>`;
 }
